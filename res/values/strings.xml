@@ -7,7 +7,7 @@
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
     <string name="animal_name">Animal Name</string>
-    <string name="tag">Tag</string>
+    <string name="code">Code</string>
     <string name="foster_parent">Foster Parent</string>
     <string name="shots_status">Shots status</string>
     <string name="sex">Sex</string>
@@ -19,5 +19,8 @@
     <string name="male">Male</string>
     <string name="female">Female</string>
     <string name="submit">Post details</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="login_details">Login Details</string>
 
 </resources>

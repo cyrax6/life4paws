@@ -14,8 +14,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/animal_name"
-            android:inputType="text"
-            android:text="test" >
+            android:inputType="text" >
 
             <requestFocus />
         </EditText>
@@ -25,8 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:hint="@string/tag"
-            android:text="6666666" />
+            android:hint="@string/code" />
 
         <EditText
             android:id="@+id/editText3"
@@ -87,7 +85,7 @@
             android:text="@string/microchipped" />
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/dismiss"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/submit"

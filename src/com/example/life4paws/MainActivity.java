@@ -1,41 +1,16 @@
 package com.example.life4paws;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-
-import org.apache.http.client.ClientProtocolException;
-
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.ByteArrayBody;
-import org.apache.http.entity.mime.content.ContentBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -45,32 +20,28 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+// import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 public class MainActivity extends FragmentActivity
 {
 
 	/**
-	 * The {@link android.support.v4.view.PagerAdapter} that will provide
-	 * fragments for each of the sections. We use a
-	 * {@link android.support.v4.app.FragmentPagerAdapter} derivative, which
-	 * will keep every loaded fragment in memory. If this becomes too memory
-	 * intensive, it may be best to switch to a
-	 * {@link android.support.v4.app.FragmentStatePagerAdapter}.
+	 * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the sections. We use a
+	 * {@link android.support.v4.app.FragmentPagerAdapter} derivative, which will keep every loaded fragment in memory. If this becomes too memory intensive, it
+	 * may be best to switch to a {@link android.support.v4.app.FragmentStatePagerAdapter}.
 	 */
 	SectionsPagerAdapter		mSectionsPagerAdapter;
 
@@ -79,15 +50,18 @@ public class MainActivity extends FragmentActivity
 	 */
 	ViewPager					mViewPager;
 
-	DefaultHttpClient			http_client					= new DefaultHttpClient();
+	private HTTPIShelter		http_interface				= null;
 
 	private static final int	MEDIA_IMAGE_REQUEST_CODE	= 2;
-	private static Uri			dog_pic						= null;
+	// private static Uri dog_pic = null; // Member variables are a bad idea in multi threaded env
+	private static String		dog_id						= null;		// Don't like this but I have trouble with intent not passing on the dog_id
+	private static final String	SOAP_KEY					= "life4paws";	// k9ppr
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		findViewById(11);
 		setContentView(R.layout.activity_main);
 
 		// Create the adapter that will return a fragment for each of the three
@@ -100,7 +74,6 @@ public class MainActivity extends FragmentActivity
 
 		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
-		performLogin("life4paws@life4paws.org", "Heather01");
 	}
 
 	@Override
@@ -111,14 +84,50 @@ public class MainActivity extends FragmentActivity
 		return true;
 	}
 
+	public void switchToLogin(View v)
+	{
+	}
+
+	public void performLogin(View v)
+	{
+		String login = getEditTextValue(R.id.loginText);
+		String password = getEditTextValue(R.id.passwordText);
+		/*
+		 * String login = "life4paws@life4paws.org"; String password = "Heather01";
+		 */
+		WebView web_view = (WebView) findViewById(R.id.webView1);
+		http_interface = new HTTPIShelter(login, password, web_view);
+		performLogin(login, password);
+	}
+
 	public void postDetails(View v)
 	{
-		dog_pic = null;
-		// checkLogin();
-		// performPostDogDetails();
-		performSearch("66666669");
-		// pickPicUri();
+		if (http_interface == null)
+		{
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage("Sentry Dog sez: Please login before posting").setCancelable(false)
+					.setPositiveButton("OK", new DialogInterface.OnClickListener()
+					{
+						public void onClick(DialogInterface dialog, int id)
+						{
 
+						}
+					});
+			AlertDialog alert = builder.create();
+			alert.show();
+		}
+		else
+		{
+			dog_id = null;
+			// checkLogin();
+			// dog_id = performPostDogDetails();
+			// pickPicUri(dog_id);
+			// dog_id = "76073";
+			// String dog_id = getDogId(getEditTextValue(R.id.editText2));
+			// String dog_id = getDogIdWS("75719");
+			// String dog_id = getDogIdWS("44949");
+			// String dog_id = getDogIdWS("70415");
+		}
 	}
 
 	@Override
@@ -130,18 +139,21 @@ public class MainActivity extends FragmentActivity
 			switch (requestCode)
 			{
 				case MEDIA_IMAGE_REQUEST_CODE:
-					dog_pic = i.getData();
-					uploadDogPicture("75719", "w00f", dog_pic);
+					Uri dog_pic = i.getData();
+					// String dog_id = extras.getString("ID"); // TODO: Intent doesn't seem to give the extras properly
+					uploadDogPicture(dog_id, "default", dog_pic);
 					break;
 			}
 		}
 	}
 
-	private final void pickPicUri()
+	// TODO: How to pass the dog id as a part of the intent instead of storing it as part of the class
+	private final void pickPicUri(String dog_id)
 	{
 		try
 		{
 			Intent img_gallery_intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+			img_gallery_intent.putExtra("ID", dog_id); // TODO: This doesn't seem to be working
 			startActivityForResult(img_gallery_intent, MEDIA_IMAGE_REQUEST_CODE);
 		}
 		catch (Exception e)
@@ -150,96 +162,50 @@ public class MainActivity extends FragmentActivity
 		}
 	}
 
-	private final void checkLogin()
-	{
-		HttpGet request = new HttpGet("http://ishelter.ishelters.com/index.php");
-		try
-		{
-			HttpResponse response = http_client.execute(request);
-			Log.d("Http Response:", response.toString());
-			final int status = response.getStatusLine().getStatusCode();
-			Log.d("Status:", String.valueOf(status));
-			printResponse(response);
-
-		}
-		catch (ClientProtocolException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	}
-
-	private final void printResponse(HttpResponse response)
-	{
-		HttpEntity entity = response.getEntity();
-		BufferedReader in;
-		try
-		{
-			in = new BufferedReader(new InputStreamReader(entity.getContent()));
-			StringBuffer sb = new StringBuffer("");
-			String line = "";
-			String NL = System.getProperty("line.separator");
-			while ((line = in.readLine()) != null)
-			{
-				sb.append(line + NL);
-			}
-			in.close();
-			String page = sb.toString();
-			Log.d("Result", page);
-			WebView wv = (WebView) findViewById(R.id.webView1);
-			wv.loadData(page, "text/html", null);
-		}
-		catch (IllegalStateException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-	}
-
 	private final String getDogBreedId(String breed)
 	{
-		return "59177";
+		int dog_id = DogBreedIdx.getBreedID(breed);
+		return Integer.toString(dog_id);
 	}
 
 	private final String getSpeciesId(String species)
 	{
 		return "1287";
 	}
-	
+
 	private final String getEditTextValue(int resource)
 	{
 		String result = ((EditText) findViewById(resource)).getText().toString();
 		return result;
 	}
+	
+	private final String getGender(int radio)
+	{
+		RadioGroup rd = (RadioGroup) findViewById(radio);
+		if( rd.getCheckedRadioButtonId() == R.id.radio0)
+			return "313"; // Male
+		else if( rd.getCheckedRadioButtonId() == R.id.radio1)
+			return "314";
+		
+		return ""; // wut?
+	}
 
-	private final void performPostDogDetails()
+	private final String performPostDogDetails()
 	{
 		// Post the dog details here
-		String url = "http://ishelter.ishelters.com/as/similar.php";
+		String url = "http://ishelter.ishelters.com/as/addProcess.php"; // Skipping the server side check for now on similar.php
 		List<NameValuePair> name_value_pair = new ArrayList<NameValuePair>(1);
 		name_value_pair.add(new BasicNameValuePair("n", getEditTextValue(R.id.editText1)));
-		name_value_pair.add(new BasicNameValuePair("s", getSpeciesId("dog"))); // 1287 is for
-																	// a dog.
-																	// meh
-		name_value_pair.add(new BasicNameValuePair("b", getDogBreedId("")));
+		name_value_pair.add(new BasicNameValuePair("s", getSpeciesId("dog")));
+		name_value_pair.add(new BasicNameValuePair("b", getDogBreedId(getEditTextValue(R.id.autoCompleteTextView1))));
 		name_value_pair.add(new BasicNameValuePair("c", getEditTextValue(R.id.editText2)));
+		name_value_pair.add(new BasicNameValuePair("g", getGender(R.id.radioGroup1)));
+		
 
-		HttpResponse response = performPost(url, name_value_pair);
-		printResponse(response);
+		HttpResponse response = http_interface.performPost(url, name_value_pair, false);
+		String dog_id = http_interface.getDogId(response);
+		http_interface.printResponse(response);
+		return dog_id;
 	}
 
 	private final void performLogin(String login, String passwd)
@@ -248,150 +214,32 @@ public class MainActivity extends FragmentActivity
 		List<NameValuePair> name_value_pair = new ArrayList<NameValuePair>(2);
 		name_value_pair.add(new BasicNameValuePair("email", login));
 		name_value_pair.add(new BasicNameValuePair("password", passwd));
-		performPost(url, name_value_pair);
+		http_interface.performPost(url, name_value_pair, true);
 	}
 
-	private final void performSearch(String code)
-	{
-		String url = "http://ishelter.ishelters.com/qs.php";
-		List<NameValuePair> name_value_pair = new ArrayList<NameValuePair>(1);
-		name_value_pair.add(new BasicNameValuePair("submit", ""));
-		name_value_pair.add(new BasicNameValuePair("s", code));
-		HttpResponse response = performPost(url, name_value_pair);
-		getDogId(response);
-		printResponse(response);
-	}
-
-	private final String getDogId(HttpResponse response)
-	{
-		String id = null;
-		try
-		{
-			InputStream is = response.getEntity().getContent();
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document doc = db.parse(is);
-		}
-		catch (IllegalStateException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (ParserConfigurationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (SAXException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}		
-		return id;
-	}
-	
 	private final void uploadDogPicture(String id, String title, Uri img_path)
 	{
 		String url = "http://ishelter.ishelters.com/ip/addProcess.php";
 		List<NameValuePair> name_value_pair = new ArrayList<NameValuePair>(1);
 		name_value_pair.add(new BasicNameValuePair("id", id));
 		name_value_pair.add(new BasicNameValuePair("t", title));
-		HttpResponse response = performMultipartPost(url, name_value_pair, img_path);
-		printResponse(response);
-
-	}
-
-	private final HttpResponse performMultipartPost(String url, List<NameValuePair> nameValuePairs, Uri img_uri)
-	{
-		HttpContext local_content = new BasicHttpContext();
-		HttpPost http_post = new HttpPost(url);
-		HttpResponse response = null;
 
 		try
 		{
-			MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-
-			for (int index = 0; index < nameValuePairs.size(); index++)
-			{
-				// Normal string data
-				entity.addPart(nameValuePairs.get(index).getName(), new StringBody(nameValuePairs.get(index).getValue()));
-			}
-
-			InputStream in_stream = getContentResolver().openInputStream(img_uri);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			Bitmap bm = BitmapFactory.decodeStream(in_stream);
-			bm.compress(CompressFormat.JPEG, 60, bos);
 			ImageView img_view = (ImageView) findViewById(R.id.imageView1);
-			img_view.setImageBitmap(bm);
-			ContentBody content_body = new ByteArrayBody(bos.toByteArray(), "image/jpeg", img_uri.getPath());
-
-			entity.addPart("i", content_body);
-
-			http_post.setEntity(entity);
-
-			response = http_client.execute(http_post, local_content);
+			img_view.setImageURI(img_path);
+			InputStream in_stream = getContentResolver().openInputStream(img_path);
+			http_interface.performMultipartPost(url, name_value_pair, in_stream, img_path);
 		}
-		catch (ClientProtocolException e)
+		catch (FileNotFoundException e)
 		{
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		return response;
-	}
-
-	private final HttpResponse performPost(String url, List<NameValuePair> name_value_pair)
-	{
-		HttpPost http_post = new HttpPost(url);
-
-		// Url Encoding the POST parameters
-		try
-		{
-			http_post.setEntity(new UrlEncodedFormEntity(name_value_pair));
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			// writing error to Log
-			e.printStackTrace();
-		}
-
-		HttpResponse response = null;
-		try
-		{
-			response = http_client.execute(http_post);
-			Log.d("Http Response:", response.toString());
-			final int status = response.getStatusLine().getStatusCode();
-			Log.d("Status:", String.valueOf(status));
-		}
-		catch (ClientProtocolException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		return response;
 	}
 
 	/**
-	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-	 * one of the sections/tabs/pages.
+	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to one of the sections/tabs/pages.
 	 */
 	public class SectionsPagerAdapter extends FragmentPagerAdapter
 	{
@@ -410,12 +258,19 @@ public class MainActivity extends FragmentActivity
 			Fragment fragment = null;
 			if (position == 0)
 			{
+				fragment = new LoginSectionFragment();
+				Bundle args = new Bundle();
+				args.putInt(LoginSectionFragment.LOGIN_SECTION_NAME, position + 1);
+				fragment.setArguments(args);
+			}
+			else if (position == 1)
+			{
 				fragment = new AnimalSectionFragment();
 				Bundle args = new Bundle();
 				args.putInt(AnimalSectionFragment.ANIMAL_SECTION_NAME, position + 1);
 				fragment.setArguments(args);
 			}
-			else if (position == 1)
+			else if (position == 2)
 			{
 				fragment = new AnimalRetrieveFragment();
 				Bundle args = new Bundle();
@@ -438,8 +293,10 @@ public class MainActivity extends FragmentActivity
 			switch (position)
 			{
 				case 0:
-					return getString(R.string.animal_details);
+					return getString(R.string.login_details);
 				case 1:
+					return getString(R.string.animal_details);
+				case 2:
 					return getString(R.string.animal_details);
 			}
 			return null;
@@ -447,14 +304,12 @@ public class MainActivity extends FragmentActivity
 	}
 
 	/**
-	 * A dummy fragment representing a section of the app, but that simply
-	 * displays dummy text.
+	 * A dummy fragment representing a section of the app, but that simply displays dummy text.
 	 */
 	public static class DummySectionFragment extends Fragment
 	{
 		/**
-		 * The fragment argument representing the section number for this
-		 * fragment.
+		 * The fragment argument representing the section number for this fragment.
 		 */
 		public static final String	ARG_SECTION_NUMBER	= "section_number";
 
@@ -486,6 +341,11 @@ public class MainActivity extends FragmentActivity
 		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 		{
 			View root_view = inflater.inflate(R.layout.animal_detail, container, false);
+
+			ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, DogBreedIdx.dog_breeds);
+			AutoCompleteTextView textView = (AutoCompleteTextView) root_view.findViewById(R.id.autoCompleteTextView1);
+			textView.setAdapter(adapter);
+
 			return root_view;
 		}
 	}
@@ -503,6 +363,23 @@ public class MainActivity extends FragmentActivity
 		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 		{
 			View root_view = inflater.inflate(R.layout.animal_retrieve, container, false);
+			return root_view;
+		}
+	}
+
+	public static class LoginSectionFragment extends Fragment
+	{
+		public static final String	LOGIN_SECTION_NAME	= "login";
+
+		public LoginSectionFragment()
+		{
+
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+		{
+			View root_view = inflater.inflate(R.layout.login, container, false);
 			return root_view;
 		}
 	}
