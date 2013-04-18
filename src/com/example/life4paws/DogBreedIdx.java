@@ -45,6 +45,11 @@ public class DogBreedIdx
 		return breed;
 	}
 	
+	/**
+	 * Maps a breed name as given on the ishelters website to the id as given in the drop down box
+	 * Potential problem with data not being in sync with the website since the above array is generated based on the greasemonkey script
+	 * @return breed id as listed out on the animal add.php
+	 */
 	static int getBreedID(String breed_name)
 	{
 		for(int i =0; i < dog_breeds.length; ++i)

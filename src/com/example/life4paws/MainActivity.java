@@ -54,7 +54,7 @@ public class MainActivity extends FragmentActivity
 
 	private static final int	MEDIA_IMAGE_REQUEST_CODE	= 2;
 	// private static Uri dog_pic = null; // Member variables are a bad idea in multi threaded env
-	private static String		dog_id						= null;		// Don't like this but I have trouble with intent not passing on the dog_id
+	private static String		dog_id						= null; // Don't like this but I have trouble with intent not passing on the dog_id
 	private static final String	SOAP_KEY					= "";	// k9ppr
 
 	@Override
@@ -84,10 +84,11 @@ public class MainActivity extends FragmentActivity
 		return true;
 	}
 
-	public void switchToLogin(View v)
-	{
-	}
-
+	/**
+	 * Performs login based on the given credentials. Does not do much with the soap key so it doesn't have that listed
+	 * 
+	 * @param v
+	 */
 	public void performLogin(View v)
 	{
 		String login = getEditTextValue(R.id.loginText);
@@ -97,6 +98,12 @@ public class MainActivity extends FragmentActivity
 		performLogin(login, password);
 	}
 
+	/**
+	 * Called when the post details button is pushed. Will do the following in one go Create a dog profile. Does not check if the dog exists explicitly Asks the
+	 * user to pick a picture and uploads it, else the dog won't have a pic
+	 * Ofcourse throws a fit if you are not logged in
+	 * @param v
+	 */
 	public void postDetails(View v)
 	{
 		if (http_interface == null)
@@ -116,9 +123,10 @@ public class MainActivity extends FragmentActivity
 		else
 		{
 			dog_id = null;
+			// Deliberately disabled for now.
 			// checkLogin();
-			// dog_id = performPostDogDetails();
-			// pickPicUri(dog_id);
+			// dog_id = performPostDogDetails(); // Uncomment if you want to do something
+			// pickPicUri(dog_id); // Uncomment if you want to post pic
 			// dog_id = "76073";
 			// String dog_id = getDogId(getEditTextValue(R.id.editText2));
 			// String dog_id = getDogIdWS("75719");
@@ -127,6 +135,9 @@ public class MainActivity extends FragmentActivity
 		}
 	}
 
+	/**
+	 * Async dog pic upload. Need to refine this further as I don't want to lock up the main thread
+	 */
 	@Override
 	protected final void onActivityResult(final int requestCode, final int resultCode, final Intent i)
 	{
@@ -175,15 +186,15 @@ public class MainActivity extends FragmentActivity
 		String result = ((EditText) findViewById(resource)).getText().toString();
 		return result;
 	}
-	
+
 	private final String getGender(int radio)
 	{
 		RadioGroup rd = (RadioGroup) findViewById(radio);
-		if( rd.getCheckedRadioButtonId() == R.id.radio0)
+		if (rd.getCheckedRadioButtonId() == R.id.radio0)
 			return "313"; // Male
-		else if( rd.getCheckedRadioButtonId() == R.id.radio1)
+		else if (rd.getCheckedRadioButtonId() == R.id.radio1)
 			return "314";
-		
+
 		return ""; // wut?
 	}
 
@@ -197,7 +208,6 @@ public class MainActivity extends FragmentActivity
 		name_value_pair.add(new BasicNameValuePair("b", getDogBreedId(getEditTextValue(R.id.autoCompleteTextView1))));
 		name_value_pair.add(new BasicNameValuePair("c", getEditTextValue(R.id.editText2)));
 		name_value_pair.add(new BasicNameValuePair("g", getGender(R.id.radioGroup1)));
-		
 
 		HttpResponse response = http_interface.performPost(url, name_value_pair, false);
 		String dog_id = http_interface.getDogId(response);
