@@ -55,7 +55,7 @@ public class MainActivity extends FragmentActivity
 	private static final int	MEDIA_IMAGE_REQUEST_CODE	= 2;
 	// private static Uri dog_pic = null; // Member variables are a bad idea in multi threaded env
 	private static String		dog_id						= null;		// Don't like this but I have trouble with intent not passing on the dog_id
-	private static final String	SOAP_KEY					= "life4paws";	// k9ppr
+	private static final String	SOAP_KEY					= "";	// k9ppr
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -92,9 +92,6 @@ public class MainActivity extends FragmentActivity
 	{
 		String login = getEditTextValue(R.id.loginText);
 		String password = getEditTextValue(R.id.passwordText);
-		/*
-		 * String login = "life4paws@life4paws.org"; String password = "Heather01";
-		 */
 		WebView web_view = (WebView) findViewById(R.id.webView1);
 		http_interface = new HTTPIShelter(login, password, web_view);
 		performLogin(login, password);
