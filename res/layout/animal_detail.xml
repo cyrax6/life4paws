@@ -26,8 +26,8 @@
             android:ems="10"
             android:hint="@string/code" />
 
-        <EditText
-            android:id="@+id/editText3"
+        <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -55,7 +55,7 @@
         </RadioGroup>
 
         <AutoCompleteTextView
-            android:id="@+id/autoCompleteTextView1"
+            android:id="@+id/autoCompleteTextView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -70,13 +70,13 @@
             android:hint="@string/age"
             android:inputType="number" />
 
-        <EditText
-            android:id="@+id/editText5"
+        <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:hint="@string/phone_num"
-            android:inputType="phone" />
+            android:hint="@string/default_assigner"
+            android:inputType="textPersonName" />
 
         <CheckBox
             android:id="@+id/checkBox1"

@@ -41,8 +41,8 @@ public class SOAPIShelter
 			http_transport.call(SOAP_ACTION, envelope);
 			SoapObject resultsRequestSOAP = (SoapObject) envelope.bodyIn;
 
-			String response_str = http_transport.responseDump.toString();
-			String req_str = http_transport.requestDump.toString();
+			// String response_str = http_transport.responseDump.toString(); // Debug string
+			// String req_str = http_transport.requestDump.toString(); // Debug string
 			System.out.println("Response::" + resultsRequestSOAP.toString());
 		}
 		catch (IllegalStateException e)

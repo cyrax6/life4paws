@@ -103,7 +103,8 @@ public class HTTPIShelter
 		// Url Encoding the POST parameters
 		try
 		{
-			http_post.setEntity(new UrlEncodedFormEntity(name_value_pair));
+			if(name_value_pair != null)
+				http_post.setEntity(new UrlEncodedFormEntity(name_value_pair));
 		}
 		catch (UnsupportedEncodingException e)
 		{
@@ -131,16 +132,26 @@ public class HTTPIShelter
 		{
 			e.printStackTrace();
 		}
+		
 		return response;
 	}
 
 	public final void printResponse(HttpResponse response)
 	{
-		HttpEntity entity = response.getEntity();
-		BufferedReader in;
+		if (web_view != null)
+		{
+			String page = getResponseAsString(response);
+			web_view.loadData(page, "text/html", null);
+		}
+	}
+
+	public static String getResponseAsString(HttpResponse response) 
+	{
+		String page = null;
 		try
 		{
-			in = new BufferedReader(new InputStreamReader(entity.getContent()));
+			HttpEntity entity = response.getEntity();
+			BufferedReader in = new BufferedReader(new InputStreamReader(entity.getContent()));
 			StringBuffer sb = new StringBuffer("");
 			String line = "";
 			String NL = System.getProperty("line.separator");
@@ -149,12 +160,8 @@ public class HTTPIShelter
 				sb.append(line + NL);
 			}
 			in.close();
-			String page = sb.toString();
-			Log.d("Result", page);
-			if (web_view != null)
-			{
-				web_view.loadData(page, "text/html", null);
-			}
+			page = sb.toString();
+			// Log.d("Result", page);
 		}
 		catch (IllegalStateException e)
 		{
@@ -168,8 +175,10 @@ public class HTTPIShelter
 		{
 			e.printStackTrace();
 		}
+		
+		return page;
 	}
-
+	
 	public final void checkLogin()
 	{
 		HttpGet request = new HttpGet("http://ishelter.ishelters.com/index.php");
@@ -195,7 +204,7 @@ public class HTTPIShelter
 		}
 	}
 
-	public final String getDogId(HttpResponse response)
+	public static final String getDogId(HttpResponse response)
 	{
 		String id = null;
 		try

@@ -25,15 +25,15 @@ public final class R {
     }
     public static final class id {
         public static final int action_settings=0x7f080013;
-        public static final int autoCompleteTextView1=0x7f080008;
+        public static final int autoCompleteTextView1=0x7f080004;
+        public static final int autoCompleteTextView2=0x7f080008;
+        public static final int autoCompleteTextView3=0x7f08000a;
         public static final int checkBox1=0x7f08000b;
         public static final int dismiss=0x7f08000c;
         public static final int doLogin=0x7f080012;
         public static final int editText1=0x7f080002;
         public static final int editText2=0x7f080003;
-        public static final int editText3=0x7f080004;
         public static final int editText4=0x7f080009;
-        public static final int editText5=0x7f08000a;
         public static final int imageView1=0x7f08000e;
         public static final int loginText=0x7f080010;
         public static final int pager=0x7f080000;
@@ -63,6 +63,7 @@ public final class R {
         public static final int app_name=0x7f050000;
         public static final int breed=0x7f05000a;
         public static final int code=0x7f050006;
+        public static final int default_assigner=0x7f050015;
         public static final int female=0x7f050010;
         public static final int foster_parent=0x7f050007;
         public static final int login=0x7f050012;

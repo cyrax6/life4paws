@@ -2,8 +2,11 @@ package com.example.life4paws;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.HttpResponse;
@@ -20,6 +23,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.text.format.Time;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -51,6 +55,7 @@ public class MainActivity extends FragmentActivity
 	ViewPager					mViewPager;
 
 	private HTTPIShelter		http_interface				= null;
+	private Volunteer[]			volunteers					= null;
 
 	private static final int	MEDIA_IMAGE_REQUEST_CODE	= 2;
 	// private static Uri dog_pic = null; // Member variables are a bad idea in multi threaded env
@@ -96,12 +101,15 @@ public class MainActivity extends FragmentActivity
 		WebView web_view = (WebView) findViewById(R.id.webView1);
 		http_interface = new HTTPIShelter(login, password, web_view);
 		performLogin(login, password);
+		volunteers = fetchVolunteers(http_interface);
+		fillVolunteerList(volunteers, R.id.autoCompleteTextView1);
+		fillVolunteerList(volunteers, R.id.autoCompleteTextView3);
 	}
 
 	/**
 	 * Called when the post details button is pushed. Will do the following in one go Create a dog profile. Does not check if the dog exists explicitly Asks the
-	 * user to pick a picture and uploads it, else the dog won't have a pic
-	 * Ofcourse throws a fit if you are not logged in
+	 * user to pick a picture and uploads it, else the dog won't have a pic Ofcourse throws a fit if you are not logged in
+	 * 
 	 * @param v
 	 */
 	public void postDetails(View v)
@@ -123,11 +131,13 @@ public class MainActivity extends FragmentActivity
 		else
 		{
 			dog_id = null;
+			dog_id = "76073";
 			// Deliberately disabled for now.
 			// checkLogin();
 			// dog_id = performPostDogDetails(); // Uncomment if you want to do something
+			assignFosterParent(dog_id);
 			// pickPicUri(dog_id); // Uncomment if you want to post pic
-			// dog_id = "76073";
+
 			// String dog_id = getDogId(getEditTextValue(R.id.editText2));
 			// String dog_id = getDogIdWS("75719");
 			// String dog_id = getDogIdWS("44949");
@@ -154,7 +164,7 @@ public class MainActivity extends FragmentActivity
 			}
 		}
 	}
-
+	
 	// TODO: How to pass the dog id as a part of the intent instead of storing it as part of the class
 	private final void pickPicUri(String dog_id)
 	{
@@ -197,20 +207,62 @@ public class MainActivity extends FragmentActivity
 
 		return ""; // wut?
 	}
+	
+	private final String getDogName()
+	{
+		return getEditTextValue(R.id.editText1);
+	}
+	
+	
+	private final String getDefaultAssignerId()
+	{
+		return Volunteer.getVolunteerId(volunteers, getEditTextValue(R.id.autoCompleteTextView1));
+	}
+	
+	private final String getAssignee()
+	{
+		return getEditTextValue(R.id.autoCompleteTextView1);
+	}
+	
+	private final String getCurrentTime()
+	{
+		Time today = new Time(Time.getCurrentTimezone());
+		today.setToNow();
+		String format = "MM/dd/yy 00:00:00";
+		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.getDefault());
+		String date_time = sdf.format(new Date());
+		return date_time;
+	}
 
+	private final void assignFosterParent(String dog_id)
+	{
+		String url = "http://ishelter.ishelters.com/asp/addProcess.php";
+		List<NameValuePair> name_value_pair = new ArrayList<NameValuePair>(1);
+		name_value_pair.add(new BasicNameValuePair("a", dog_id));
+		name_value_pair.add(new BasicNameValuePair("aa", getDogName()));
+		name_value_pair.add(new BasicNameValuePair("pp", getAssignee()));
+		name_value_pair.add(new BasicNameValuePair("ap", getDefaultAssignerId()));
+		name_value_pair.add(new BasicNameValuePair("sd", getCurrentTime()));
+		name_value_pair.add(new BasicNameValuePair("submit", "Add"));
+		name_value_pair.add(new BasicNameValuePair("p", getDefaultAssignerId()));
+
+		HttpResponse response = http_interface.performPost(url, name_value_pair, false);
+		http_interface.printResponse(response);
+	}
+	
 	private final String performPostDogDetails()
 	{
 		// Post the dog details here
 		String url = "http://ishelter.ishelters.com/as/addProcess.php"; // Skipping the server side check for now on similar.php
 		List<NameValuePair> name_value_pair = new ArrayList<NameValuePair>(1);
-		name_value_pair.add(new BasicNameValuePair("n", getEditTextValue(R.id.editText1)));
+		name_value_pair.add(new BasicNameValuePair("n", getDogName()));
 		name_value_pair.add(new BasicNameValuePair("s", getSpeciesId("dog")));
-		name_value_pair.add(new BasicNameValuePair("b", getDogBreedId(getEditTextValue(R.id.autoCompleteTextView1))));
+		name_value_pair.add(new BasicNameValuePair("b", getDogBreedId(getEditTextValue(R.id.autoCompleteTextView2))));
 		name_value_pair.add(new BasicNameValuePair("c", getEditTextValue(R.id.editText2)));
 		name_value_pair.add(new BasicNameValuePair("g", getGender(R.id.radioGroup1)));
 
 		HttpResponse response = http_interface.performPost(url, name_value_pair, false);
-		String dog_id = http_interface.getDogId(response);
+		String dog_id = HTTPIShelter.getDogId(response);
 		http_interface.printResponse(response);
 		return dog_id;
 	}
@@ -243,6 +295,15 @@ public class MainActivity extends FragmentActivity
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private final Volunteer[] fetchVolunteers(HTTPIShelter http_interface)
+	{
+		VolunteerScraper scraper = new VolunteerScraper();
+		List<Volunteer> volunteers = scraper.BuildVolunteerList(http_interface);
+		Volunteer vol_list[] = volunteers.toArray(new Volunteer[volunteers.size()]);
+
+		return vol_list;
 	}
 
 	/**
@@ -348,15 +409,31 @@ public class MainActivity extends FragmentActivity
 		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 		{
 			View root_view = inflater.inflate(R.layout.animal_detail, container, false);
-
 			ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, DogBreedIdx.dog_breeds);
-			AutoCompleteTextView textView = (AutoCompleteTextView) root_view.findViewById(R.id.autoCompleteTextView1);
+			AutoCompleteTextView textView = (AutoCompleteTextView) root_view.findViewById(R.id.autoCompleteTextView2);
 			textView.setAdapter(adapter);
-
 			return root_view;
 		}
 	}
 
+	private final void fillDogBreedList(String[] dog_breeds, int resource_id)
+	{
+
+	}
+	
+	private final void fillVolunteerList(Volunteer[] volunteers, int resource_id)
+	{
+		List<String> names = new ArrayList<String>();
+		for(Volunteer vol : volunteers)
+		{
+			names.add(vol.name);
+		}
+		
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, names);
+		AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(resource_id);
+		textView.setAdapter(adapter);
+	}
+	
 	public static class AnimalRetrieveFragment extends Fragment
 	{
 		public static final String	ANIMAL_SECTION_NAME	= "animal_retrieve";
